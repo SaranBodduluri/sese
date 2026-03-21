@@ -14,13 +14,20 @@ import React, { useState } from 'react';
 import { InputSource } from './InputSource';
 import { TeachingBoard } from './TeachingBoard';
 import { TutorWorkspace } from './TutorWorkspace';
-import { TutorFeedback, AnalyzeRequest } from '@/lib/ai/types';
+import { VoiceOnboardingModal } from '../onboarding/VoiceOnboardingModal';
+import { TutorFeedback, AnalyzeRequest, SessionProfile } from '@/lib/ai/types';
 import { logger } from '@/lib/logger';
 
 export function WorkspaceLayout() {
+  const [sessionProfile, setSessionProfile] = useState<SessionProfile | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [feedback, setFeedback] = useState<TutorFeedback | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const handleStartSession = (profile: SessionProfile) => {
+    setSessionProfile(profile);
+    logger.info('Session started', { profile });
+  };
 
   const handleAnalyze = async (base64Image: string, mimeType: string) => {
     setIsAnalyzing(true);
@@ -29,7 +36,7 @@ export function WorkspaceLayout() {
     try {
       logger.info('User requested analysis of image');
       
-      const payload: AnalyzeRequest = { base64Image, mimeType };
+      const payload: AnalyzeRequest = { base64Image, mimeType, sessionProfile: sessionProfile || undefined };
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: {
@@ -53,6 +60,10 @@ export function WorkspaceLayout() {
     }
   };
 
+  if (!sessionProfile) {
+    return <VoiceOnboardingModal onStartSession={handleStartSession} />;
+  }
+
   return (
     <div className="h-full flex flex-col gap-4">
       {error && (
@@ -75,7 +86,7 @@ export function WorkspaceLayout() {
 
         {/* 3. Tutor Workspace (Right Panel) */}
         <div className="w-full lg:w-80 shrink-0 h-[50vh] lg:h-full">
-          <TutorWorkspace feedback={feedback} isAnalyzing={isAnalyzing} />
+          <TutorWorkspace feedback={feedback} isAnalyzing={isAnalyzing} sessionProfile={sessionProfile} />
         </div>
       </div>
     </div>

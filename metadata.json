@@ -1,5 +1,5 @@
 {
   "name": "Sese",
   "description": "A real-time multimodal AI study companion for students solving handwritten problems.",
-  "requestFramePermissions": []
+  "requestFramePermissions": ["display-capture"]
 }

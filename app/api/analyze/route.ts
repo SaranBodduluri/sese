@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     }
 
     logger.info('Received analysis request via API route');
-    const feedback = await analyzeStudentWork(body.base64Image, body.mimeType);
+    const feedback = await analyzeStudentWork(body.base64Image, body.mimeType, body.sessionProfile);
     
     return NextResponse.json(feedback);
   } catch (error) {

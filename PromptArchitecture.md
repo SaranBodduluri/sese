@@ -35,5 +35,11 @@ All prompt modules live in `/lib/ai/prompts/`.
 - **Responsibility**: Generates the conversational response from Sese, combining encouragement and guidance.
 - **Maps to Schema**: `tutorSpeech`, `followUpQuestion`, `mascotState`.
 
+## Dynamic Context Injection
+In `gemini.ts`, we dynamically inject the `SessionProfile` (collected via the voice onboarding flow) into the prompt before the modular parts. This includes:
+- **Student Context**: Name, course, and study goal.
+- **Course Materials**: Base64 encoded text/PDF content from uploaded materials.
+- **Grounding Instructions**: Explicit instructions to use the materials, set `grounded: true`, and provide `citations` if the materials are used.
+
 ## Structured Outputs
-We use Gemini's `responseSchema` feature to enforce a strict JSON contract (`TutorFeedback`). This ensures the UI components always receive predictable data types (e.g., arrays for equations, enums for correctness) and prevents the app from crashing due to malformed text outputs.
+We use Gemini's `responseSchema` feature to enforce a strict JSON contract (`TutorFeedback`). This ensures the UI components always receive predictable data types (e.g., arrays for equations, enums for correctness, arrays of citation objects) and prevents the app from crashing due to malformed text outputs.

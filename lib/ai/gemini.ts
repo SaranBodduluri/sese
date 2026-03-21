@@ -16,7 +16,7 @@
 import { GoogleGenAI, Type } from '@google/genai';
 import { config } from '../config';
 import { logger } from '../logger';
-import { TutorFeedback } from './types';
+import { TutorFeedback, SessionProfile } from './types';
 import { getSystemPrompt } from './prompts/system';
 import { getAnalyzeBoardPrompt } from './prompts/analyze-board';
 import { getGenerateTeachingBoardPrompt } from './prompts/generate-teaching-board';
@@ -33,15 +33,41 @@ const ai = new GoogleGenAI({ apiKey: config.env.geminiApiKey });
  * 
  * @param base64Image - The base64 encoded image of the student's work.
  * @param mimeType - The MIME type of the image (e.g., 'image/jpeg').
+ * @param sessionProfile - Optional session profile containing student info and course materials.
  * @returns A promise that resolves to a TutorFeedback object.
  */
-export async function analyzeStudentWork(base64Image: string, mimeType: string): Promise<TutorFeedback> {
+export async function analyzeStudentWork(base64Image: string, mimeType: string, sessionProfile?: SessionProfile): Promise<TutorFeedback> {
   logger.info('Starting analysis of student work (Server-side)');
 
   try {
+    let sessionContext = '';
+    if (sessionProfile) {
+      sessionContext = `
+        --- SESSION CONTEXT ---
+        Student Name: ${sessionProfile.studentName}
+        Course/Subject: ${sessionProfile.courseSubject}
+        Study Goal: ${sessionProfile.studyGoal}
+        ${sessionProfile.chapterLabel ? `Chapter/Assignment: ${sessionProfile.chapterLabel}` : ''}
+        
+        --- COURSE MATERIALS ---
+        ${sessionProfile.materials.length > 0 ? 
+          sessionProfile.materials.map(m => `Source: ${m.name} (${m.type})\nContent:\n${m.contentBase64 ? Buffer.from(m.contentBase64, 'base64').toString('utf-8') : 'No content provided'}`).join('\n\n') 
+          : 'No course materials provided.'}
+        
+        INSTRUCTIONS FOR GROUNDING:
+        - Greet the student by name in your tutorSpeech.
+        - Reference their study goal if relevant.
+        - If course materials are provided, you MUST use them to ground your explanations, hints, and concept reminders.
+        - If you use the materials, set "grounded" to true and provide "citations".
+        - If the materials do not contain relevant information, or if no materials are provided, set "grounded" to false and leave "citations" empty. Do NOT invent fake citations.
+      `;
+    }
+
     const promptParts = [
       {
         text: `
+          ${sessionContext}
+
           ${getAnalyzeBoardPrompt()}
           
           ${getNextHintPrompt()}
@@ -91,6 +117,22 @@ export async function analyzeStudentWork(base64Image: string, mimeType: string):
               description: "The emotion of the panda.",
               enum: ['happy', 'thinking', 'encouraging', 'confused']
             },
+            grounded: { type: Type.BOOLEAN, description: "Whether the response is grounded in the provided course materials." },
+            citations: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  sourceTitle: { type: Type.STRING, description: "The title of the source material." },
+                  sourceType: { type: Type.STRING, enum: ['pdf', 'notes', 'slides', 'formula_sheet'], description: "The type of the source material." },
+                  pageReference: { type: Type.STRING, description: "The page number or section reference." },
+                  quotedOrReferencedSection: { type: Type.STRING, description: "A short quote or description of the referenced section." },
+                  confidence: { type: Type.NUMBER, description: "Confidence in the citation between 0 and 1." }
+                },
+                required: ['sourceTitle', 'sourceType', 'quotedOrReferencedSection', 'confidence']
+              },
+              description: "Citations from the provided course materials."
+            },
             boardContent: {
               type: Type.OBJECT,
               properties: {
@@ -131,7 +173,7 @@ export async function analyzeStudentWork(base64Image: string, mimeType: string):
           required: [
             'detectedSubject', 'whatISaw', 'currentStep', 'correctnessAssessment', 
             'likelyMistakes', 'nextHint', 'conceptReminder', 'followUpQuestion', 
-            'confidence', 'needsClarification', 'tutorSpeech', 'mascotState', 'boardContent'
+            'confidence', 'needsClarification', 'tutorSpeech', 'mascotState', 'boardContent', 'grounded', 'citations'
           ]
         }
       }
