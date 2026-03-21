@@ -34,11 +34,10 @@ export interface Citation {
 export interface BoardContent {
   title: string;
   equations: string[];
-  steps: string[];
-  annotations: string[];
-  highlights: string[];
+  orderedSteps: string[];
   conceptNotes: string;
-  corrections: string[];
+  correctionHighlights: string[];
+  finalConclusion: string;
 }
 
 export interface TutorFeedback {

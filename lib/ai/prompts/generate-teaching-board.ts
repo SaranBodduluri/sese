@@ -3,7 +3,7 @@
  * @description Prompt module for generating content for Sese's Teaching Board.
  *
  * Use Cases:
- * - Instructs the model to generate clean equations, steps, annotations, highlights, concept notes, and corrections.
+ * - Instructs the model to generate clean equations, structured text, ordered steps, concept notes, correction highlights, and final conclusion.
  * - Maps to the boardContent object.
  */
 
@@ -14,9 +14,8 @@ The board is a digital blackboard where Sese writes clean explanations.
 Provide:
 1. title: A short title for the board content.
 2. equations: A list of clean, corrected, or next-step equations. Format them nicely.
-3. steps: A list of logical steps to solve the problem.
-4. annotations: Short notes to display alongside the equations.
-5. highlights: Specific parts of the equations or steps to highlight.
-6. conceptNotes: A brief, clear summary of the core concept being taught.
-7. corrections: A list of short notes highlighting specific mistakes (if any). Leave empty if correct.
+3. orderedSteps: A list of logical steps to solve the problem.
+4. conceptNotes: A brief, clear summary of the core concept being taught.
+5. correctionHighlights: A list of short notes highlighting specific mistakes (if any). Leave empty if correct.
+6. finalConclusion: A summary or final message displayed on the board.
 `;

@@ -1,3 +1,13 @@
+/**
+ * @file route.ts
+ * @description Server-side API route for analyzing student work.
+ * 
+ * Use Cases:
+ * - Accepts base64 encoded images of the student's work.
+ * - Routes the request to Gemini AI via `analyzeStudentWork`.
+ * - Returns structured JSON containing tutor feedback, equations, and speech.
+ */
+
 import { NextResponse } from 'next/server';
 import { analyzeStudentWork } from '@/lib/ai/gemini';
 import { AnalyzeRequest } from '@/lib/ai/types';

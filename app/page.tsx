@@ -1,3 +1,12 @@
+/**
+ * @file page.tsx
+ * @description The main entry point for the Sese app.
+ * 
+ * Use Cases:
+ * - Renders the global app header.
+ * - Mounts the WorkspaceLayout component.
+ */
+
 import { WorkspaceLayout } from '@/components/workspace/WorkspaceLayout';
 
 export default function Home() {

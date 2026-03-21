@@ -1,5 +1,15 @@
 'use client';
 
+/**
+ * @file VoiceOnboardingModal.tsx
+ * @description Pre-session modal to collect student context via voice or text.
+ * 
+ * Use Cases:
+ * - Greets the user using voice and collects profile data (name, goal, etc.).
+ * - Allows uploading of course materials for grounding.
+ * - Sets the session profile which initializes the tutor session.
+ */
+
 import React, { useState, useRef, useEffect } from 'react';
 import { BookOpen, Upload, X, Play, FileText, File, Mic, MicOff, Edit2, Check } from 'lucide-react';
 import { SessionProfile, CourseMaterial } from '@/lib/ai/types';
@@ -16,11 +26,7 @@ export function VoiceOnboardingModal({ onStartSession }: VoiceOnboardingModalPro
   const [isEditing, setIsEditing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (state === 'idle') {
-      startOnboarding();
-    }
-  }, [state, startOnboarding]);
+  // Removed useEffect to prevent autoplay blocks: User must click a button to initiate audio.
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -95,6 +101,7 @@ export function VoiceOnboardingModal({ onStartSession }: VoiceOnboardingModalPro
 
   const getQuestionText = () => {
     switch (state) {
+      case 'idle': return "Click 'Begin Setup' to start voice initialization.";
       case 'greeting': return "Hello. I am Sese, your personal study companion.";
       case 'askingName':
       case 'listeningForName': return "What is your name?";
@@ -136,7 +143,15 @@ export function VoiceOnboardingModal({ onStartSession }: VoiceOnboardingModalPro
 
             {/* Transcript / Listening Indicator */}
             <div className="h-12 flex items-center justify-center">
-              {isListening ? (
+              {state === 'idle' ? (
+                <button
+                  onClick={startOnboarding}
+                  className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-medium transition-colors shadow-lg flex items-center gap-2"
+                >
+                  <Play className="w-4 h-4" />
+                  Begin Setup
+                </button>
+              ) : isListening ? (
                 <div className="flex items-center gap-3 text-indigo-400 bg-indigo-500/10 px-6 py-3 rounded-full border border-indigo-500/20">
                   <Mic className="w-5 h-5 animate-pulse" />
                   <span className="text-lg font-medium italic">

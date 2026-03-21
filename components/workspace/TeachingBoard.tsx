@@ -5,14 +5,14 @@
  * @description The main large panel on the left styled like a digital blackboard.
  * 
  * Use Cases:
- * - Renders generated instructional content (equations, corrections, concept notes).
+ * - Renders generated instructional content (equations, ordered steps, concept notes, correction highlights, conclusion).
  * - Acts as the visual center of the product.
  */
 
 import React from 'react';
 import { TutorFeedback } from '@/lib/ai/types';
 import { motion, AnimatePresence } from 'motion/react';
-import { Presentation, AlertTriangle, BookOpen } from 'lucide-react';
+import { Presentation, AlertTriangle, BookOpen, Lightbulb } from 'lucide-react';
 
 interface TeachingBoardProps {
   feedback: TutorFeedback | null;
@@ -60,7 +60,7 @@ export function TeachingBoard({ feedback, isAnalyzing }: TeachingBoardProps) {
               )}
 
               {/* Equations Section */}
-              {feedback.boardContent.equations.length > 0 && (
+              {feedback.boardContent.equations && feedback.boardContent.equations.length > 0 && (
                 <div className="space-y-4">
                   <h3 className="text-indigo-400/80 text-sm uppercase tracking-widest border-b border-indigo-500/30 pb-2">Steps & Equations</h3>
                   <div className="space-y-3 pl-4 border-l-2 border-indigo-500/50">
@@ -74,37 +74,25 @@ export function TeachingBoard({ feedback, isAnalyzing }: TeachingBoardProps) {
               )}
 
               {/* Steps Section */}
-              {feedback.boardContent.steps && feedback.boardContent.steps.length > 0 && (
+              {feedback.boardContent.orderedSteps && feedback.boardContent.orderedSteps.length > 0 && (
                 <div className="space-y-4">
                   <h3 className="text-emerald-400/80 text-sm uppercase tracking-widest border-b border-emerald-500/30 pb-2">Logical Steps</h3>
                   <ol className="list-decimal list-inside space-y-2 text-emerald-100/90 text-lg">
-                    {feedback.boardContent.steps.map((step, idx) => (
+                    {feedback.boardContent.orderedSteps.map((step, idx) => (
                       <li key={idx}>{step}</li>
                     ))}
                   </ol>
                 </div>
               )}
 
-              {/* Annotations Section */}
-              {feedback.boardContent.annotations && feedback.boardContent.annotations.length > 0 && (
-                <div className="space-y-4">
-                  <h3 className="text-cyan-400/80 text-sm uppercase tracking-widest border-b border-cyan-500/30 pb-2">Annotations</h3>
-                  <ul className="list-disc list-inside space-y-2 text-cyan-100/90 text-lg">
-                    {feedback.boardContent.annotations.map((ann, idx) => (
-                      <li key={idx}>{ann}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
               {/* Corrections Section */}
-              {feedback.boardContent.corrections && feedback.boardContent.corrections.length > 0 && (
+              {feedback.boardContent.correctionHighlights && feedback.boardContent.correctionHighlights.length > 0 && (
                 <div className="space-y-4">
                   <h3 className="text-rose-400/80 text-sm uppercase tracking-widest border-b border-rose-500/30 pb-2 flex items-center gap-2">
                     <AlertTriangle className="w-4 h-4" /> Corrections
                   </h3>
                   <div className="space-y-3 pl-4 border-l-2 border-rose-500/50">
-                    {feedback.boardContent.corrections.map((corr, idx) => (
+                    {feedback.boardContent.correctionHighlights.map((corr, idx) => (
                       <div key={idx} className="text-lg text-rose-200">
                         <span className="text-rose-400 mr-2">→</span>{corr}
                       </div>
@@ -121,6 +109,18 @@ export function TeachingBoard({ feedback, isAnalyzing }: TeachingBoardProps) {
                   </h3>
                   <div className="p-6 bg-slate-800/50 rounded-xl border border-slate-700/50 text-amber-100/90 text-lg leading-relaxed">
                     {feedback.boardContent.conceptNotes}
+                  </div>
+                </div>
+              )}
+
+              {/* Final Conclusion */}
+              {feedback.boardContent.finalConclusion && (
+                <div className="space-y-4">
+                  <h3 className="text-cyan-400/80 text-sm uppercase tracking-widest border-b border-cyan-500/30 pb-2 flex items-center gap-2">
+                    <Lightbulb className="w-4 h-4" /> Conclusion
+                  </h3>
+                  <div className="p-6 bg-cyan-900/20 rounded-xl border border-cyan-700/50 text-cyan-50 text-lg leading-relaxed italic">
+                    {feedback.boardContent.finalConclusion}
                   </div>
                 </div>
               )}

@@ -142,32 +142,26 @@ export async function analyzeStudentWork(base64Image: string, mimeType: string, 
                   items: { type: Type.STRING },
                   description: "Clean, corrected, or next-step equations to display on the board."
                 },
-                steps: {
+                orderedSteps: {
                   type: Type.ARRAY,
                   items: { type: Type.STRING },
                   description: "Logical steps to solve the problem."
-                },
-                annotations: {
-                  type: Type.ARRAY,
-                  items: { type: Type.STRING },
-                  description: "Short notes to display alongside the equations."
-                },
-                highlights: {
-                  type: Type.ARRAY,
-                  items: { type: Type.STRING },
-                  description: "Specific parts of the equations or steps to highlight."
                 },
                 conceptNotes: {
                   type: Type.STRING,
                   description: "A brief, clear summary of the core concept being taught."
                 },
-                corrections: {
+                correctionHighlights: {
                   type: Type.ARRAY,
                   items: { type: Type.STRING },
                   description: "Short notes highlighting specific mistakes."
+                },
+                finalConclusion: {
+                  type: Type.STRING,
+                  description: "A summary or final message displayed on the board."
                 }
               },
-              required: ['title', 'equations', 'steps', 'annotations', 'highlights', 'conceptNotes', 'corrections']
+              required: ['title', 'equations', 'orderedSteps', 'conceptNotes', 'correctionHighlights', 'finalConclusion']
             }
           },
           required: [

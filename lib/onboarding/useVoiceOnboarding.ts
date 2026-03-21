@@ -14,6 +14,8 @@ export function useVoiceOnboarding() {
   
   const recognitionRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const hasStartedRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
   
   // Initialize speech recognition
   useEffect(() => {
@@ -31,6 +33,11 @@ export function useVoiceOnboarding() {
 
   const speak = useCallback(async (text: string, onEnd?: () => void) => {
     if (typeof window !== 'undefined') {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+
       try {
         if (audioRef.current) {
           audioRef.current.pause();
@@ -46,6 +53,7 @@ export function useVoiceOnboarding() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ text }),
+          signal: abortControllerRef.current.signal,
         });
 
         if (!response.ok) {
@@ -198,6 +206,9 @@ export function useVoiceOnboarding() {
   }, [state, listen, advanceState]);
 
   const startOnboarding = useCallback(() => {
+    if (hasStartedRef.current) return;
+    hasStartedRef.current = true;
+    
     setState('greeting');
     speak("Hello. I am Sese, your personal study companion. I'm here to help you learn.", () => {
       setState('askingName');
