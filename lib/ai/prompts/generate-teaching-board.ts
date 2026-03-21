@@ -9,13 +9,15 @@
 
 export const getGenerateTeachingBoardPrompt = () => `
 Based on your analysis, generate content for Sese's Teaching Board.
-The board is a digital blackboard where Sese writes clean explanations.
+The board is plain text (no canvas); keep it scannable and concise.
 
 Provide:
-1. title: A short title for the board content.
-2. equations: A list of clean, corrected, or next-step equations. Format them nicely.
-3. orderedSteps: A list of logical steps to solve the problem.
-4. conceptNotes: A brief, clear summary of the core concept being taught.
-5. correctionHighlights: A list of short notes highlighting specific mistakes (if any). Leave empty if correct.
-6. finalConclusion: A summary or final message displayed on the board.
+1. title: Short headline for this turn (what you are helping them with).
+2. equations: Key equations or expressions (corrected form or next line to write). Use standard math notation as plain text.
+3. orderedSteps: Numbered-style steps they should follow next (small bites, not the full solution).
+4. conceptNotes: One tight paragraph on the idea behind the step.
+5. correctionHighlights: If something looks wrong in their work, short bullets; otherwise use an empty array.
+6. finalConclusion: One-sentence wrap-up or encouragement.
+
+Keep boardContent consistent with tutorSpeech so voice and board never contradict each other.
 `;

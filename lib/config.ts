@@ -8,13 +8,13 @@
  * - Toggle features on/off for the MVP.
  * 
  * Assumptions:
- * - NEXT_PUBLIC_GEMINI_API_KEY is provided in the environment.
+ * - GEMINI_API_KEY (or GOOGLE_API_KEY) is set server-side only — never expose keys via NEXT_PUBLIC_*.
  */
 
 export const config = {
   ai: {
-    // We use gemini-3.1-pro-preview for complex reasoning and multimodal tasks
-    modelName: 'gemini-3.1-pro-preview',
+    /** Override with GEMINI_MODEL in the environment (e.g. gemini-2.0-flash). */
+    modelName: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
     temperature: 0.7,
     maxOutputTokens: 1024,
   },
@@ -30,7 +30,6 @@ export const config = {
     enableSessionHistory: true,
   },
   env: {
-    geminiApiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY || '',
     appUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   },
   timeouts: {

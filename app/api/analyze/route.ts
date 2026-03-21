@@ -29,10 +29,8 @@ export async function POST(request: Request) {
     
     return NextResponse.json(feedback);
   } catch (error) {
-    logger.error('API Route Error', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json(
-      { error: 'Failed to analyze image' },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : String(error);
+    logger.error('API Route Error', { error: message });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

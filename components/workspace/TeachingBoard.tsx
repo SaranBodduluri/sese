@@ -10,16 +10,17 @@
  */
 
 import React from 'react';
-import { TutorFeedback } from '@/lib/ai/types';
+import { TutorFeedback, SessionProfile } from '@/lib/ai/types';
 import { motion, AnimatePresence } from 'motion/react';
 import { Presentation, AlertTriangle, BookOpen, Lightbulb } from 'lucide-react';
 
 interface TeachingBoardProps {
   feedback: TutorFeedback | null;
   isAnalyzing: boolean;
+  sessionProfile: SessionProfile | null;
 }
 
-export function TeachingBoard({ feedback, isAnalyzing }: TeachingBoardProps) {
+export function TeachingBoard({ feedback, isAnalyzing, sessionProfile }: TeachingBoardProps) {
   return (
     <div className="flex flex-col h-full bg-[#1e293b] rounded-2xl shadow-xl border-8 border-slate-800 overflow-hidden relative">
       {/* Board Header */}
@@ -130,10 +131,28 @@ export function TeachingBoard({ feedback, isAnalyzing }: TeachingBoardProps) {
               key="empty"
               initial={{ opacity: 0 }} 
               animate={{ opacity: 1 }}
-              className="h-full flex flex-col items-center justify-center text-slate-600"
+              className="h-full flex flex-col items-center justify-center text-slate-400 px-6 max-w-2xl mx-auto text-center space-y-4"
             >
-              <p className="text-xl">The board is clean.</p>
-              <p className="text-sm mt-2">Waiting for student input to begin...</p>
+              <p className="text-xs uppercase tracking-widest text-indigo-400/90">Session</p>
+              {sessionProfile ? (
+                <>
+                  <h2 className="text-2xl md:text-3xl font-bold text-slate-100">
+                    Hi, {sessionProfile.studentName}
+                  </h2>
+                  <p className="text-lg text-slate-300">
+                    Today focus: <span className="text-emerald-300/95">{sessionProfile.courseSubject}</span>
+                  </p>
+                  <p className="text-sm text-slate-500 leading-relaxed">
+                    Connect your OneNote window, capture a frame when you want feedback, and Sese will write the next step
+                    and talk you through it.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-xl text-slate-300">The board is ready.</p>
+                  <p className="text-sm text-slate-500">Complete onboarding to start your session.</p>
+                </>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

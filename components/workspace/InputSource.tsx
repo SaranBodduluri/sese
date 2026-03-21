@@ -130,7 +130,7 @@ export function InputSource({ onAnalyze, isAnalyzing }: InputSourceProps) {
 
       <div className="flex-1 p-4 flex flex-col gap-4">
         <div className="text-xs text-slate-400">
-          Connect your OneNote window for live observation.
+          Connect your OneNote window for live observation. After you analyze a frame once, the tutor panel can re-check that same snapshot.
         </div>
         
         <div className="flex-1 relative rounded-lg overflow-hidden border-2 border-slate-700 bg-slate-900 flex flex-col items-center justify-center">

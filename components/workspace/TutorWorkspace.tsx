@@ -22,9 +22,19 @@ interface TutorWorkspaceProps {
   feedback: TutorFeedback | null;
   isAnalyzing: boolean;
   sessionProfile: SessionProfile | null;
+  /** True after at least one frame was analyzed (same snapshot reused for tutor actions). */
+  hasLastFrame: boolean;
+  /** Re-runs multimodal analysis on the last captured frame. */
+  onTutorAction: (action: 'hint' | 'explain' | 'check') => void;
 }
 
-export function TutorWorkspace({ feedback, isAnalyzing, sessionProfile }: TutorWorkspaceProps) {
+export function TutorWorkspace({
+  feedback,
+  isAnalyzing,
+  sessionProfile,
+  hasLastFrame,
+  onTutorAction,
+}: TutorWorkspaceProps) {
   const [isMuted, setIsMuted] = useState(!config.elevenlabs.autoPlayTutorAudio);
   const isMutedRef = useRef(isMuted);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -349,20 +359,35 @@ export function TutorWorkspace({ feedback, isAnalyzing, sessionProfile }: TutorW
 
       </div>
 
-      {/* Quick Actions */}
+      {/* Quick Actions — reuse last capture; same Gemini call as “Analyze Latest Frame” (MVP). */}
       <div className="p-4 bg-slate-50 border-t border-slate-100 grid grid-cols-2 gap-2">
-         <button className="flex flex-col items-center justify-center gap-1 p-3 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-indigo-300 transition-colors text-slate-600 hover:text-indigo-600">
-           <Lightbulb className="w-5 h-5" />
-           <span className="text-xs font-medium">Hint Me</span>
-         </button>
-         <button className="flex flex-col items-center justify-center gap-1 p-3 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-indigo-300 transition-colors text-slate-600 hover:text-indigo-600">
-           <MessageCircle className="w-5 h-5" />
-           <span className="text-xs font-medium">Explain</span>
-         </button>
-         <button className="col-span-2 flex items-center justify-center gap-2 p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 transition-colors shadow-sm">
-           <Zap className="w-4 h-4" />
-           <span className="text-sm font-medium">Check My Step</span>
-         </button>
+        <button
+          type="button"
+          disabled={!hasLastFrame || isAnalyzing}
+          onClick={() => onTutorAction('hint')}
+          className="flex flex-col items-center justify-center gap-1 p-3 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-indigo-300 transition-colors text-slate-600 hover:text-indigo-600 disabled:opacity-50 disabled:pointer-events-none"
+        >
+          <Lightbulb className="w-5 h-5" />
+          <span className="text-xs font-medium">Hint Me</span>
+        </button>
+        <button
+          type="button"
+          disabled={!hasLastFrame || isAnalyzing}
+          onClick={() => onTutorAction('explain')}
+          className="flex flex-col items-center justify-center gap-1 p-3 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-indigo-300 transition-colors text-slate-600 hover:text-indigo-600 disabled:opacity-50 disabled:pointer-events-none"
+        >
+          <MessageCircle className="w-5 h-5" />
+          <span className="text-xs font-medium">Explain</span>
+        </button>
+        <button
+          type="button"
+          disabled={!hasLastFrame || isAnalyzing}
+          onClick={() => onTutorAction('check')}
+          className="col-span-2 flex items-center justify-center gap-2 p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 transition-colors shadow-sm disabled:opacity-50 disabled:pointer-events-none"
+        >
+          {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+          <span className="text-sm font-medium">{isAnalyzing ? 'Thinking…' : 'Check My Step'}</span>
+        </button>
       </div>
     </div>
   );

@@ -36,7 +36,7 @@ export async function generateSpeech(request: TTSRequest): Promise<TTSResponse> 
     return { error: 'TTS is disabled in configuration.' };
   }
 
-  const apiKey = process.env.ELEVENLABS_API_KEY || 'sk_144e4d0d9498d070035fe38465a17368da1573720b79030d';
+  const apiKey = process.env.ELEVENLABS_API_KEY;
   if (!apiKey) {
     logger.error('ElevenLabs API key is missing.');
     return { error: 'ElevenLabs API key is missing.' };

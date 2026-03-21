@@ -24,9 +24,19 @@ import { getNextHintPrompt } from './prompts/next-hint';
 import { getExplainConceptPrompt } from './prompts/explain-concept';
 import { getTutorSpeechPrompt } from './prompts/tutor-speech';
 
-// Initialize the Gemini client
-// Note: NEXT_PUBLIC_GEMINI_API_KEY must be set in the environment.
-const ai = new GoogleGenAI({ apiKey: config.env.geminiApiKey });
+/** Server-only Gemini client; API key must never be bundled to the browser. */
+let geminiClient: GoogleGenAI | null = null;
+
+function getGeminiClient(): GoogleGenAI {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
+  if (!apiKey) {
+    throw new Error('Missing GEMINI_API_KEY or GOOGLE_API_KEY (server environment).');
+  }
+  if (!geminiClient) {
+    geminiClient = new GoogleGenAI({ apiKey });
+  }
+  return geminiClient;
+}
 
 /**
  * Analyzes the student's handwritten work and provides structured feedback.
@@ -38,6 +48,7 @@ const ai = new GoogleGenAI({ apiKey: config.env.geminiApiKey });
  */
 export async function analyzeStudentWork(base64Image: string, mimeType: string, sessionProfile?: SessionProfile): Promise<TutorFeedback> {
   logger.info('Starting analysis of student work (Server-side)');
+  const ai = getGeminiClient();
 
   try {
     let sessionContext = '';
@@ -111,7 +122,11 @@ export async function analyzeStudentWork(base64Image: string, mimeType: string, 
             followUpQuestion: { type: Type.STRING, description: "A guiding question for the student." },
             confidence: { type: Type.NUMBER, description: "Confidence score between 0 and 1." },
             needsClarification: { type: Type.BOOLEAN, description: "Whether the image is too blurry or unclear." },
-            tutorSpeech: { type: Type.STRING, description: "A short motivational message and feedback." },
+            tutorSpeech: {
+              type: Type.STRING,
+              description:
+                "Spoken script for the student: walk through what is on the teaching board (title, key equations/steps), say what to do next, stay encouraging. Must align with boardContent.",
+            },
             mascotState: {
               type: Type.STRING,
               description: "The emotion of the panda.",
