@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { OnboardingState, OnboardingData } from './types';
 import { logger } from '@/lib/logger';
+import { selectEnglishFemaleVoice } from '@/lib/tts/selectBrowserVoice';
 
 const INITIAL_DATA: OnboardingData = {
   studentName: '',
@@ -117,15 +118,10 @@ export function useVoiceOnboarding() {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         const voices = window.speechSynthesis.getVoices();
-        const preferredVoice =
-          voices.find(
-            (v) =>
-              v.name.includes('Google UK English Female') ||
-              v.name.includes('Samantha') ||
-              v.name.includes('Daniel'),
-          ) || voices[0];
+        const preferredVoice = selectEnglishFemaleVoice(voices);
         if (preferredVoice) utterance.voice = preferredVoice;
-        utterance.rate = 0.95;
+        utterance.rate = 1.08;
+        utterance.pitch = 1.06;
         utterance.onend = () => onEnd?.();
         utterance.onerror = () => onEnd?.();
         window.speechSynthesis.speak(utterance);

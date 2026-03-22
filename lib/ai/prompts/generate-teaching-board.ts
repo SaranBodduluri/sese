@@ -18,6 +18,8 @@ Provide:
 4. conceptNotes: One tight paragraph on the idea behind the step.
 5. correctionHighlights: If something looks wrong in their work, short bullets; otherwise use an empty array.
 6. finalConclusion: One-sentence wrap-up or encouragement.
+7. solutionProgress (optional JSON sibling of boardContent): ONLY when orderedSteps has 2+ meaningful steps. Set totalSteps to orderedSteps.length and currentStepIndex to the 0-based step the student is currently on (infer from their work). Omit entirely for single-step problems.
 
 Keep boardContent consistent with tutorSpeech so voice and board never contradict each other.
+The board text can stay slightly more formal than tutorSpeech; tutorSpeech carries the hype.
 `;

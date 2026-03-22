@@ -2,8 +2,7 @@
 
 /**
  * @file VoiceOnboardingModal.tsx
- * @description Two-question voice-first onboarding: name and what you're studying today.
- * Text fallback and optional materials upload; maps to SessionProfile for the tutor.
+ * @description Onboarding modal — light, minimal, aligned with Sese design system.
  */
 
 import React, { useState, useRef } from 'react';
@@ -79,22 +78,22 @@ export function VoiceOnboardingModal({ onStartSession }: VoiceOnboardingModalPro
 
   const renderMascot = () => {
     let emoji = '🐼';
-    let bgClass = 'bg-slate-100';
+    let bgClass = 'bg-[#F9FAFB]';
     let animationClass = '';
 
     if (isListening) {
       emoji = '🐼👂';
-      bgClass = 'bg-indigo-50';
+      bgClass = 'bg-[#FFFBF5]';
       animationClass = 'animate-pulse';
     } else if (isSpeaking) {
       emoji = '🐼💬';
-      bgClass = 'bg-emerald-50';
+      bgClass = 'bg-[#FFF7ED]';
       animationClass = 'animate-bounce';
     }
 
     return (
       <div
-        className={`w-32 h-32 rounded-full flex items-center justify-center text-7xl shadow-inner ${bgClass} ${animationClass} transition-colors duration-500 shrink-0 mx-auto`}
+        className={`w-28 h-28 rounded-full flex items-center justify-center text-6xl border border-[#E5E7EB] shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] ${bgClass} ${animationClass} transition-colors duration-500 shrink-0 mx-auto`}
       >
         {emoji}
       </div>
@@ -104,9 +103,9 @@ export function VoiceOnboardingModal({ onStartSession }: VoiceOnboardingModalPro
   const getQuestionText = () => {
     switch (state) {
       case 'idle':
-        return "Click 'Begin' to start voice setup.";
+        return 'Tap Begin to start.';
       case 'greeting':
-        return 'Hello — Sese is getting ready...';
+        return 'One moment…';
       case 'askingName':
       case 'listeningForName':
         return "What's your name?";
@@ -115,27 +114,27 @@ export function VoiceOnboardingModal({ onStartSession }: VoiceOnboardingModalPro
         return 'What are you studying today?';
       case 'confirmingSession':
       case 'ready':
-        return 'Review your answers, then continue to the workspace.';
+        return 'Review and continue when you are ready.';
       default:
-        return 'Setting up your session...';
+        return 'Setting up…';
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0A0A0A]/40 backdrop-blur-sm p-4">
+      <div className="bg-white border border-[#E5E7EB] rounded-2xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
         <div className="p-8 flex-1 overflow-y-auto flex flex-col items-center justify-center space-y-8">
-          <div className="text-center space-y-6 w-full max-w-xl">
+          <div className="text-center space-y-6 w-full max-w-md">
             {renderMascot()}
 
-            <div className="min-h-[80px] flex flex-col items-center justify-center">
+            <div className="min-h-[72px] flex flex-col items-center justify-center">
               <AnimatePresence mode="wait">
                 <motion.h2
                   key={getQuestionText()}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="text-2xl font-light text-slate-200 text-center leading-relaxed"
+                  exit={{ opacity: 0, y: -8 }}
+                  className="text-xl font-medium text-[#0A0A0A] text-center leading-snug"
                 >
                   {getQuestionText()}
                 </motion.h2>
@@ -145,16 +144,19 @@ export function VoiceOnboardingModal({ onStartSession }: VoiceOnboardingModalPro
             <div className="h-12 flex items-center justify-center">
               {state === 'idle' ? (
                 <button
+                  type="button"
                   onClick={startOnboarding}
-                  className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-medium transition-colors shadow-lg flex items-center gap-2"
+                  className="px-6 py-2.5 bg-[#0A0A0A] hover:bg-[#262626] text-white rounded-xl text-sm font-medium transition-colors flex items-center gap-2"
                 >
                   <Play className="w-4 h-4" />
                   Begin
                 </button>
               ) : isListening ? (
-                <div className="flex items-center gap-3 text-indigo-400 bg-indigo-500/10 px-6 py-3 rounded-full border border-indigo-500/20">
-                  <Mic className="w-5 h-5 animate-pulse" />
-                  <span className="text-lg font-medium italic">{transcript || 'Listening...'}</span>
+                <div className="flex items-center gap-3 text-[#FF6A00] bg-[#FFF7ED] px-5 py-2.5 rounded-full border border-[#FFEDD5]">
+                  <Mic className="w-4 h-4 animate-pulse" />
+                  <span className="text-sm font-medium italic text-[#0A0A0A]">
+                    {transcript || 'Listening…'}
+                  </span>
                 </div>
               ) : (
                 <div className="h-12" />
@@ -167,42 +169,40 @@ export function VoiceOnboardingModal({ onStartSession }: VoiceOnboardingModalPro
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className="w-full max-w-xl bg-slate-800/50 rounded-2xl p-6 border border-slate-700/50 space-y-6"
+                className="w-full max-w-md bg-[#F9FAFB] rounded-xl p-5 border border-[#E5E7EB] space-y-5"
               >
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">Your answers</h3>
-                </div>
+                <h3 className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#9CA3AF]">Your answers</h3>
 
                 <div className="space-y-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-400">Your name</label>
+                    <label className="text-xs font-medium text-[#6B7280]">Name</label>
                     <input
                       type="text"
                       value={data.studentName}
                       onChange={(e) => setData((prev) => ({ ...prev, studentName: e.target.value }))}
-                      placeholder="e.g. Alex"
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
+                      placeholder="Alex"
+                      className="w-full bg-white border border-[#E5E7EB] rounded-lg px-3 py-2 text-sm text-[#0A0A0A] focus:outline-none focus:ring-2 focus:ring-[#FF6A00]/35 focus:border-transparent"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-400">What you&apos;re studying today</label>
+                    <label className="text-xs font-medium text-[#6B7280]">Studying today</label>
                     <input
                       type="text"
                       value={data.studyTopic}
                       onChange={(e) => setData((prev) => ({ ...prev, studyTopic: e.target.value }))}
                       placeholder="e.g. Calculus — derivatives"
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-white border border-[#E5E7EB] rounded-lg px-3 py-2 text-sm text-[#0A0A0A] focus:outline-none focus:ring-2 focus:ring-[#FF6A00]/35 focus:border-transparent"
                     />
                   </div>
-                  <p className="text-xs text-slate-500">
-                    Voice answers appear here; you can edit anytime. If the mic is unreliable, type instead.
+                  <p className="text-[11px] text-[#9CA3AF] leading-relaxed">
+                    Voice or type — edit anytime.
                   </p>
                 </div>
 
-                <div className="pt-4 border-t border-slate-700/50 space-y-4">
+                <div className="pt-4 border-t border-[#E5E7EB] space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">Course materials</h3>
-                    <span className="text-xs text-slate-500">Optional</span>
+                    <h3 className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#9CA3AF]">Materials</h3>
+                    <span className="text-[10px] text-[#9CA3AF]">Optional</span>
                   </div>
 
                   <div
@@ -212,10 +212,10 @@ export function VoiceOnboardingModal({ onStartSession }: VoiceOnboardingModalPro
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click();
                     }}
-                    className="border-2 border-dashed border-slate-700 rounded-xl p-4 flex flex-col items-center justify-center text-slate-400 hover:border-indigo-500 hover:text-indigo-400 hover:bg-indigo-500/5 transition-colors cursor-pointer"
+                    className="border border-dashed border-[#E5E7EB] rounded-xl p-4 flex flex-col items-center justify-center text-[#9CA3AF] hover:border-[#FF6A00]/35 hover:bg-[#FFFBF5] transition-colors cursor-pointer"
                   >
-                    <Upload className="w-5 h-5 mb-2" />
-                    <span className="text-sm font-medium">Click to upload materials</span>
+                    <Upload className="w-5 h-5 mb-2" strokeWidth={1.25} />
+                    <span className="text-xs font-medium text-[#6B7280]">Upload files</span>
                     <input
                       type="file"
                       ref={fileInputRef}
@@ -227,24 +227,24 @@ export function VoiceOnboardingModal({ onStartSession }: VoiceOnboardingModalPro
                   </div>
 
                   {materials.length > 0 && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
+                    <div className="grid grid-cols-1 gap-2">
                       {materials.map((material) => (
                         <div
                           key={material.id}
-                          className="flex items-center justify-between bg-slate-800 border border-slate-700 rounded-lg p-2"
+                          className="flex items-center justify-between bg-white border border-[#E5E7EB] rounded-lg px-2 py-1.5"
                         >
-                          <div className="flex items-center gap-2 overflow-hidden">
+                          <div className="flex items-center gap-2 overflow-hidden min-w-0">
                             {material.type === 'pdf' ? (
-                              <FileText className="w-4 h-4 text-rose-400 shrink-0" />
+                              <FileText className="w-3.5 h-3.5 text-[#9CA3AF] shrink-0" />
                             ) : (
-                              <File className="w-4 h-4 text-blue-400 shrink-0" />
+                              <File className="w-3.5 h-3.5 text-[#9CA3AF] shrink-0" />
                             )}
-                            <span className="text-xs text-slate-300 truncate">{material.name}</span>
+                            <span className="text-xs text-[#374151] truncate">{material.name}</span>
                           </div>
                           <button
                             type="button"
                             onClick={() => removeMaterial(material.id)}
-                            className="p-1 text-slate-500 hover:text-rose-400 transition-colors"
+                            className="p-1 text-[#9CA3AF] hover:text-[#DC2626] transition-colors"
                           >
                             <X className="w-3 h-3" />
                           </button>
@@ -258,14 +258,14 @@ export function VoiceOnboardingModal({ onStartSession }: VoiceOnboardingModalPro
           </AnimatePresence>
         </div>
 
-        <div className="p-6 border-t border-slate-800 bg-slate-900/50 flex items-center justify-between">
+        <div className="p-5 border-t border-[#E5E7EB] bg-[#FAFAFA] flex items-center justify-between gap-4">
           {state !== 'ready' ? (
             <button
               type="button"
               onClick={skipToReady}
-              className="text-sm text-slate-400 hover:text-slate-200 transition-colors"
+              className="text-xs text-[#6B7280] hover:text-[#0A0A0A] transition-colors"
             >
-              Skip voice setup
+              Skip voice
             </button>
           ) : (
             <div />
@@ -275,9 +275,9 @@ export function VoiceOnboardingModal({ onStartSession }: VoiceOnboardingModalPro
             type="button"
             onClick={handleStart}
             disabled={!isFormValid}
-            className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-sm font-medium rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-indigo-500/20 disabled:shadow-none"
+            className="ml-auto px-6 py-2.5 bg-[#0A0A0A] hover:bg-[#262626] disabled:bg-[#E5E7EB] disabled:text-[#9CA3AF] text-white text-sm font-medium rounded-xl transition-all flex items-center gap-2"
           >
-            Continue to session
+            Continue
             <Play className="w-4 h-4" />
           </button>
         </div>

@@ -13,7 +13,7 @@
  * - Uses prompt modules for constructing the request.
  */
 
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 import { config } from '../config';
 import { logger } from '../logger';
 import { TutorFeedback, SessionProfile } from './types';
@@ -23,6 +23,9 @@ import { getGenerateTeachingBoardPrompt } from './prompts/generate-teaching-boar
 import { getNextHintPrompt } from './prompts/next-hint';
 import { getExplainConceptPrompt } from './prompts/explain-concept';
 import { getTutorSpeechPrompt } from './prompts/tutor-speech';
+import { getGroundingSpeechHint } from './prompts/grounding-speech';
+import { enrichFeedbackWithDemoGrounding } from '../grounding/enrichFeedback';
+import { getTutorFeedbackResponseSchema } from './schemas/tutorFeedbackResponseSchema';
 
 /** Server-only Gemini client; API key must never be bundled to the browser. */
 let geminiClient: GoogleGenAI | null = null;
@@ -87,6 +90,8 @@ export async function analyzeStudentWork(base64Image: string, mimeType: string, 
           
           ${getTutorSpeechPrompt()}
 
+          ${getGroundingSpeechHint()}
+
           ${getGenerateTeachingBoardPrompt()}
         `
       },
@@ -105,86 +110,7 @@ export async function analyzeStudentWork(base64Image: string, mimeType: string, 
         systemInstruction: getSystemPrompt(),
         temperature: config.ai.temperature,
         responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            detectedSubject: { type: Type.STRING, description: "The subject of the problem." },
-            whatISaw: { type: Type.STRING, description: "What you observe in the student's work." },
-            currentStep: { type: Type.STRING, description: "The current step the student is on." },
-            correctnessAssessment: { 
-              type: Type.STRING, 
-              enum: ['correct', 'incorrect', 'partial', 'unclear'],
-              description: "Whether the current step is correct." 
-            },
-            likelyMistakes: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Likely mistakes or misconceptions." },
-            nextHint: { type: Type.STRING, description: "A small, actionable hint for the next step." },
-            conceptReminder: { type: Type.STRING, description: "A brief reminder of the underlying concept." },
-            followUpQuestion: { type: Type.STRING, description: "A guiding question for the student." },
-            confidence: { type: Type.NUMBER, description: "Confidence score between 0 and 1." },
-            needsClarification: { type: Type.BOOLEAN, description: "Whether the image is too blurry or unclear." },
-            tutorSpeech: {
-              type: Type.STRING,
-              description:
-                "Spoken script for the student: walk through what is on the teaching board (title, key equations/steps), say what to do next, stay encouraging. Must align with boardContent.",
-            },
-            mascotState: {
-              type: Type.STRING,
-              description: "The emotion of the panda.",
-              enum: ['happy', 'thinking', 'encouraging', 'confused']
-            },
-            grounded: { type: Type.BOOLEAN, description: "Whether the response is grounded in the provided course materials." },
-            citations: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  sourceTitle: { type: Type.STRING, description: "The title of the source material." },
-                  sourceType: { type: Type.STRING, enum: ['pdf', 'notes', 'slides', 'formula_sheet'], description: "The type of the source material." },
-                  pageReference: { type: Type.STRING, description: "The page number or section reference." },
-                  quotedOrReferencedSection: { type: Type.STRING, description: "A short quote or description of the referenced section." },
-                  confidence: { type: Type.NUMBER, description: "Confidence in the citation between 0 and 1." }
-                },
-                required: ['sourceTitle', 'sourceType', 'quotedOrReferencedSection', 'confidence']
-              },
-              description: "Citations from the provided course materials."
-            },
-            boardContent: {
-              type: Type.OBJECT,
-              properties: {
-                title: { type: Type.STRING, description: "A short title for the board content." },
-                equations: {
-                  type: Type.ARRAY,
-                  items: { type: Type.STRING },
-                  description: "Clean, corrected, or next-step equations to display on the board."
-                },
-                orderedSteps: {
-                  type: Type.ARRAY,
-                  items: { type: Type.STRING },
-                  description: "Logical steps to solve the problem."
-                },
-                conceptNotes: {
-                  type: Type.STRING,
-                  description: "A brief, clear summary of the core concept being taught."
-                },
-                correctionHighlights: {
-                  type: Type.ARRAY,
-                  items: { type: Type.STRING },
-                  description: "Short notes highlighting specific mistakes."
-                },
-                finalConclusion: {
-                  type: Type.STRING,
-                  description: "A summary or final message displayed on the board."
-                }
-              },
-              required: ['title', 'equations', 'orderedSteps', 'conceptNotes', 'correctionHighlights', 'finalConclusion']
-            }
-          },
-          required: [
-            'detectedSubject', 'whatISaw', 'currentStep', 'correctnessAssessment', 
-            'likelyMistakes', 'nextHint', 'conceptReminder', 'followUpQuestion', 
-            'confidence', 'needsClarification', 'tutorSpeech', 'mascotState', 'boardContent', 'grounded', 'citations'
-          ]
-        }
+        responseSchema: getTutorFeedbackResponseSchema()
       }
     });
 
@@ -193,8 +119,9 @@ export async function analyzeStudentWork(base64Image: string, mimeType: string, 
       throw new Error('No text returned from Gemini API');
     }
 
-    const feedback: TutorFeedback = JSON.parse(outputText);
-    
+    const raw = JSON.parse(outputText) as Omit<TutorFeedback, 'groundingMode' | 'sourceAttributions'>;
+    const feedback = enrichFeedbackWithDemoGrounding(raw, sessionProfile);
+
     logger.ai('analyzeStudentWork', {
       model: config.ai.modelName,
       output: feedback,

@@ -14,12 +14,15 @@ The app is built around 3 conceptual surfaces, preceded by an onboarding flow:
 The app is built with Next.js (App Router), React, and Tailwind CSS. It uses `@google/genai` for multimodal AI reasoning and ElevenLabs for Text-to-Speech (TTS).
 
 ### Provider Split
-- **Gemini**: Handles all multimodal reasoning, tutoring logic, grounding, and structured JSON output generation.
+- **Gemini**: Handles all multimodal reasoning, tutoring logic, embeddings (textbook chunks), grounding, and structured JSON output generation.
 - **ElevenLabs**: Handles all voice output (TTS) to make the companion feel alive and premium.
+- **Supabase (optional)**: PostgreSQL + `pgvector` for document chunks and semantic retrieval; optional persistence for study sessions and tutor turns (service role, server-only).
 
 ### Module Boundaries
 - **`/app`**: Next.js routing and main page assembly.
-- **`/app/api/analyze`**: Server-side API route that orchestrates the Gemini AI call.
+- **`/app/api/analyze`**: Server-side API route that orchestrates the Gemini AI call for captured frames.
+- **`/app/api/tutor/chat`**: Freeform tutor conversation; may include last-frame image; runs retrieval when Supabase is configured.
+- **`/app/api/documents/ingest`**: PDF → text → chunk → embed → Supabase (Node runtime).
 - **`/app/api/tts`**: Server-side API route that orchestrates the ElevenLabs TTS call, protecting the API key.
 - **`/components/onboarding`**: UI components for the voice-first session setup flow (`VoiceOnboardingModal.tsx`).
 - **`/components/workspace`**: Domain-specific UI components for the 3 surfaces.
@@ -32,25 +35,37 @@ The app is built with Next.js (App Router), React, and Tailwind CSS. It uses `@g
 - **`/lib/logger.ts`**: Centralized logging utility for traceability.
 
 ## Data Flow
-1. User completes the `VoiceOnboardingModal`, providing their name, goal, and optional course materials via voice or text fallback. The voice prompts use the `/api/tts` route.
-2. `WorkspaceLayout` stores this `SessionProfile` in state.
-3. `InputSource` connects to a live window stream (e.g., OneNote).
-4. User clicks "Analyze Latest Frame" (or a future auto-trigger fires).
-5. `InputSource` extracts a base64 JPEG from the hidden `<canvas>`.
-6. Image and `SessionProfile` are passed to the parent `WorkspaceLayout` state.
-7. `WorkspaceLayout` calls the `/api/analyze` route.
-8. The server route calls `analyzeWork` from `/lib/ai/gemini.ts`.
-9. `analyzeWork` injects the session context and materials into the prompt, and calls the Gemini API with a strict JSON schema.
-10. The structured response (`TutorFeedback` including `boardContent`, `tutorSpeech`, and `citations`) is returned to the client.
-11. `TeachingBoard` renders the generated equations and concepts.
-12. `TutorWorkspace` renders the panda mascot state, chat feedback, and any source citations. It also automatically calls `/api/tts` with the `tutorSpeech` text and plays the resulting audio.
 
-## Current Limitations (MVP)
-- Frame extraction is triggered manually via "Analyze Latest Frame" rather than a continuous background loop.
-- No persistent database (session state is in React state).
-- No user authentication.
+### Frame analysis (existing)
+1. User completes the `VoiceOnboardingModal`, providing their name, goal, and optional course materials via voice or text fallback. The voice prompts use the `/api/tts` route.
+2. `WorkspaceLayout` stores this `SessionProfile` in state and assigns a stable `sessionKey` in `localStorage` for optional persistence.
+3. `InputSource` can upload a **textbook PDF** for grounding (when Supabase is configured): `/api/documents/ingest` extracts text, chunks it, embeds with Gemini, and stores vectors in Supabase.
+4. `InputSource` connects to a live window stream (e.g., OneNote).
+5. User clicks **Analyze frame**.
+6. `InputSource` extracts a base64 JPEG from the hidden `<canvas>`.
+7. `WorkspaceLayout` calls `/api/analyze` with the image and a **slim** session profile (material names only — see `lib/session/analyzePayload.ts`).
+8. The server calls `analyzeStudentWork` in `/lib/ai/gemini.ts`, then `enrichFeedbackWithDemoGrounding` for demo/topic chips.
+9. `TutorFeedback` updates `TeachingBoard` and `TutorWorkspace`; `TutorWorkspace` requests `/api/tts` for `tutorSpeech` when enabled.
+
+### Freeform tutor chat (new)
+1. User types or dictates in `TutorChatInput` (Web Speech API where available).
+2. `WorkspaceLayout` POSTs to `/api/tutor/chat` with the message, sanitized session profile, optional `sessionKey`, and optional last-frame snapshot for multimodal follow-ups.
+3. Server runs `retrieveChunksForQuestion` (Supabase RPC) when configured; builds retrieval context; calls `runTutorChat` (Gemini with the shared `TutorFeedback` schema + optional `celebrationSuggested`).
+4. `enrichFeedbackWithDemoGrounding` merges **vector** grounding when retrieval is strong; otherwise uses **general_reasoning** with honest UI copy when retrieval ran but did not pass the similarity threshold.
+5. Optional: `persistTutorTurn` writes messages + board snapshot to Supabase.
+6. Client plays ElevenLabs audio from updated `tutorSpeech` (same policy as analyze).
+
+## Vercel-oriented notes
+- Server routes keep provider keys off the client; TTS and Gemini only run on the server.
+- `maxDuration` is set on long AI routes for hosted deployments.
+- Future: AI Gateway–style provider routing can wrap `GoogleGenAI` construction in one module without UI changes.
+- Future: **Better Auth** can sit alongside Supabase Postgres (`DATABASE_URL`) for real user accounts; sessions are currently anonymous + `sessionKey` until auth is added.
+
+## Current limitations
+- Frame extraction is manual (not a continuous background loop).
+- **Better Auth** is not wired yet; persistence keys off `sessionKey` until accounts exist.
 
 ## Roadmap
-- **Auto Frame Analysis**: Implement a background loop to sample frames every N seconds and only trigger analysis if significant changes are detected.
-- **Real-Time Voice**: Integrate the Gemini Live API for low-latency voice interaction.
-- **Persistent Memory**: Add user profiles and session history.
+- **Better Auth** + Postgres adapter for durable user identity (Supabase Postgres connection string).
+- **Auto frame analysis**: sample frames when the workspace changes materially.
+- **AI Gateway**: centralize provider routing for observability and retries.

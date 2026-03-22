@@ -2,6 +2,8 @@ import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  /** Keep pdf.js + native deps out of the Next bundle so PDF ingest works on the server. */
+  serverExternalPackages: ['pdf-parse', 'pdfjs-dist', '@napi-rs/canvas'],
   eslint: {
     ignoreDuringBuilds: true,
   },

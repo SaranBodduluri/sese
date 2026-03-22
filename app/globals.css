@@ -1,1 +1,29 @@
 @import "tailwindcss";
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap");
+
+/**
+ * Sese design system — minimal, premium, content-first.
+ * Accent: #FF6A00 | Text: #0A0A0A | Secondary: #6B7280 | Surfaces: #F9FAFB
+ */
+@layer base {
+  :root {
+    --sese-bg: #fafafa;
+    --sese-surface: #ffffff;
+    --sese-card: #f9fafb;
+    --sese-border: #e5e7eb;
+    --sese-text: #0a0a0a;
+    --sese-muted: #6b7280;
+    --sese-faint: #9ca3af;
+    --sese-accent: #ff6a00;
+    --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+    --font-display: "Instrument Serif", Georgia, "Times New Roman", serif;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--sese-bg);
+    color: var(--sese-text);
+    -webkit-font-smoothing: antialiased;
+  }
+}

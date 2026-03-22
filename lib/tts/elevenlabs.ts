@@ -1,11 +1,11 @@
 /**
  * @file elevenlabs.ts
  * @description Dedicated service layer for interacting with the ElevenLabs TTS API.
- * 
+ *
  * Use Cases:
  * - Convert plain text to speech using the configured ElevenLabs voice and model.
  * - Handle API errors gracefully and return playable audio buffers.
- * 
+ *
  * Architecture:
  * - This module should only be called from server-side routes to protect the API key.
  * - It abstracts the raw fetch logic away from the UI and API handlers.
@@ -25,9 +25,23 @@ export interface TTSResponse {
   error?: string;
 }
 
+function buildPayload(includeSpeed: boolean, text: string, modelId: string) {
+  return {
+    text,
+    model_id: modelId,
+    voice_settings: {
+      stability: config.elevenlabs.ttsStability,
+      similarity_boost: config.elevenlabs.ttsSimilarityBoost,
+      style: config.elevenlabs.ttsStyle,
+      use_speaker_boost: config.elevenlabs.ttsUseSpeakerBoost,
+      ...(includeSpeed ? { speed: config.elevenlabs.ttsSpeed } : {}),
+    },
+  };
+}
+
 /**
  * Generates speech from text using ElevenLabs API.
- * 
+ *
  * @param request The TTS request containing the text to speak.
  * @returns A promise that resolves to a TTSResponse containing the audio buffer or an error.
  */
@@ -49,25 +63,35 @@ export async function generateSpeech(request: TTSRequest): Promise<TTSResponse> 
     logger.info('Starting TTS request', { voiceId, modelId, textLength: request.text.length });
   }
 
+  const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`;
+
   try {
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    let response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Accept': 'audio/mpeg',
+        Accept: 'audio/mpeg',
         'Content-Type': 'application/json',
         'xi-api-key': apiKey,
       },
-      body: JSON.stringify({
-        text: request.text,
-        model_id: modelId,
-        voice_settings: {
-          stability: 0.7,
-          similarity_boost: 0.8,
-          style: 0.0,
-          use_speaker_boost: true
-        }
-      }),
+      body: JSON.stringify(buildPayload(true, request.text, modelId)),
     });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.warn('ElevenLabs TTS first attempt failed; retrying without speed', {
+        status: response.status,
+        snippet: errorText.slice(0, 280),
+      });
+      response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Accept: 'audio/mpeg',
+          'Content-Type': 'application/json',
+          'xi-api-key': apiKey,
+        },
+        body: JSON.stringify(buildPayload(false, request.text, modelId)),
+      });
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -76,7 +100,7 @@ export async function generateSpeech(request: TTSRequest): Promise<TTSResponse> 
     }
 
     const audioBuffer = await response.arrayBuffer();
-    
+
     if (config.elevenlabs.voiceDebugLogging) {
       logger.info('TTS request successful', { byteLength: audioBuffer.byteLength });
     }

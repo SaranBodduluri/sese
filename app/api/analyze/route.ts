@@ -13,6 +13,9 @@ import { analyzeStudentWork } from '@/lib/ai/gemini';
 import { AnalyzeRequest } from '@/lib/ai/types';
 import { logger } from '@/lib/logger';
 
+/** Allow long Gemini multimodal calls when deployed (e.g. Vercel). */
+export const maxDuration = 120;
+
 export async function POST(request: Request) {
   try {
     const body: AnalyzeRequest = await request.json();

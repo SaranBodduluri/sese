@@ -12,6 +12,10 @@ Instead of one giant prompt string, we split responsibilities into separate file
 
 All prompt modules live in `/lib/ai/prompts/`.
 
+### 0. `tutor-freeform.ts` (freeform chat)
+- **Responsibility**: Guides Gemini on conversational turns: when to trust retrieved textbook excerpts, when to fall back to general reasoning, how to update `boardContent`, and how to write `tutorSpeech` for spoken output (no symbol-by-symbol reading).
+- **Maps to Schema**: Same `TutorFeedback` JSON as analyze, plus optional `celebrationSuggested` on chat routes.
+
 ### 1. `system.ts`
 - **Responsibility**: Sets the core persona (Sese the Panda), tone, and unbreakable rules (e.g., "NEVER give the final answer directly").
 
@@ -42,4 +46,11 @@ In `gemini.ts`, we dynamically inject the `SessionProfile` (collected via the vo
 - **Grounding Instructions**: Explicit instructions to use the materials, set `grounded: true`, and provide `citations` if the materials are used.
 
 ## Structured Outputs
-We use Gemini's `responseSchema` feature to enforce a strict JSON contract (`TutorFeedback`). This ensures the UI components always receive predictable data types (e.g., arrays for equations, enums for correctness, arrays of citation objects) and prevents the app from crashing due to malformed text outputs.
+We use Gemini's `responseSchema` feature to enforce a strict JSON contract (`TutorFeedback`). The schema object is centralized in `/lib/ai/schemas/tutorFeedbackResponseSchema.ts` so **analyze** and **tutor chat** stay aligned.
+
+Freeform chat adds optional `celebrationSuggested` (not required in JSON) for milestone celebrations.
+
+This ensures the UI components always receive predictable data types (e.g., arrays for equations, enums for correctness, arrays of citation objects) and prevents the app from crashing due to malformed text outputs.
+
+## Retrieval context (textbook grounding)
+For `/api/tutor/chat`, the server may inject retrieved chunk text (from Supabase `match_sese_document_chunks`) ahead of the modular freeform prompt. The model is instructed not to invent page numbers and to set `grounded` / `citations` honestly.
